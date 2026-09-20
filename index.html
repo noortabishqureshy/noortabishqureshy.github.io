@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <title>NTQ</title>
+  <link rel="shortcut icon" href="./images/icon.png" type="image/png">
+  <style>
+
+    :root {
+      --xp-blue-dark: #0a246a;
+      --xp-blue: #3a6ea5;
+      --xp-blue-light: #a6caf0;
+      --xp-titlebar-1: #0058ee;
+      --xp-titlebar-2: #3593ff;
+      --xp-titlebar-3: #288eff;
+      --xp-face: #ece9d8;
+      --xp-face-dark: #d4d0c8;
+      --xp-border: #0831d9;
+      --xp-green: #3c9a3c;
+      --taskbar-h: 34px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Tahoma, Verdana, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: #3a6ea5;
+    }
+
+    #boot-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      font-family: 'Trebuchet MS', Tahoma, sans-serif;
+      transition: opacity .6s ease;
+    }
+
+    #boot-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .boot-logo {
+      font-size: 2.2rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #ff8a00, #ffd000);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .boot-sub {
+      font-size: 0.85rem;
+      color: #ccc;
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+    }
+
+    .boot-bar-track {
+      width: 220px;
+      height: 14px;
+      border: 1px solid #555;
+      border-radius: 2px;
+      overflow: hidden;
+      background: #111;
+      position: relative;
+    }
+
+    .boot-bar-fill {
+      position: absolute;
+      top: 0;
+      left: -40%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, #1d5fd6, #7fb3ff, #1d5fd6);
+      animation: bootSlide 1.1s linear infinite;
+    }
+
+    @keyframes bootSlide {
+      0% {
+        left: -40%;
+      }
+
+      100% {
+        left: 100%;
+      }
+    }
+
+    .boot-status {
+      margin-top: 18px;
+      font-size: 0.75rem;
+      color: #9fc7ff;
+      font-family: 'Consolas', 'Courier New', monospace;
+      min-height: 1.2em;
+    }
+
+    #desktop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: var(--taskbar-h);
+      background:
+        radial-gradient(ellipse at 50% 120%, #2a6b1f 0%, #123c0d 45%, #061a03 100%),
+        linear-gradient(180deg, #3a7fd5 0%, #5b9bdb 35%, #bcdcf7 70%, #eaf6ff 100%);
+      background-blend-mode: normal;
+      overflow: hidden;
+    }
+
+    #desktop::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 28%;
+      background: radial-gradient(ellipse at 30% 100%, #4c9a2a 0%, #2c7a17 40%, transparent 70%),
+        radial-gradient(ellipse at 75% 100%, #5aa832 0%, #2c7a17 45%, transparent 70%);
+      pointer-events: none;
+    }
+
+    #icons {
+      position: absolute;
+      top: 14px;
+      left: 10px;
+      display: grid;
+      grid-template-columns: 84px;
+      gap: 6px;
+      z-index: 2;
+    }
+
+    .icon {
+      width: 84px;
+      padding: 6px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      border: 1px dotted transparent;
+      border-radius: 2px;
+    }
+
+    .icon:focus {
+      outline: none;
+      border: 1px dotted #fff;
+      background: rgba(50, 100, 200, .25);
+    }
+
+    .icon.selected {
+      background: rgba(50, 100, 200, .35);
+      border: 1px dotted rgba(255, 255, 255, .7);
+    }
+
+    .icon-img {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, .5));
+    }
+
+    .icon-label {
+      margin-top: 4px;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.15;
+      text-shadow: 1px 1px 2px #000, 0 0 3px #000;
+      word-wrap: break-word;
+    }
+
+    .win {
+      position: absolute;
+      min-width: 260px;
+      min-height: 180px;
+      width: 560px;
+      height: 420px;
+      background: var(--xp-face);
+      border: 1px solid #0047ab;
+      border-radius: 8px 8px 4px 4px;
+      box-shadow: 3px 5px 18px rgba(0, 0, 0, .55);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .win.active {
+      box-shadow: 4px 8px 26px rgba(0, 0, 0, .7);
+    }
+
+    .win-titlebar {
+      height: 30px;
+      flex: 0 0 30px;
+      background: linear-gradient(180deg, var(--xp-titlebar-1), var(--xp-titlebar-3) 45%, var(--xp-titlebar-2) 55%, #0050d8);
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      align-items: center;
+      padding: 0 3px 0 6px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: default;
+      touch-action: none;
+    }
+
+    .win:not(.active) .win-titlebar {
+      background: linear-gradient(180deg, #7a9bc9, #a3bce0 45%, #8fa9d6 55%, #7896c4);
+      color: #e7edf7;
+    }
+
+    .win-title {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+    }
+
+    .win-title .ti {
+      font-size: 15px;
+    }
+
+    .win-btns {
+      display: flex;
+      gap: 2px;
+    }
+
+    .win-btn {
+      width: 21px;
+      height: 20px;
+      border: 1px solid rgba(255, 255, 255, .6);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #5c9dee, #1a5fc4);
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .win-btn.close {
+      background: linear-gradient(180deg, #e88a8a, #c22525);
+    }
+
+    .win-btn:active {
+      filter: brightness(.85);
+    }
+
+    .win-menubar {
+      flex: 0 0 auto;
+      background: var(--xp-face);
+      border-bottom: 1px solid #b9b6a8;
+      font-size: 11px;
+      padding: 2px 6px;
+      color: #333;
+    }
+
+    .win-body {
+      flex: 1;
+      overflow-y: auto;
+      background: #fff;
+      padding: 16px 18px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #222;
+    }
+
+    .win-statusbar {
+      flex: 0 0 20px;
+      background: var(--xp-face);
+      border-top: 1px solid #fff;
+      box-shadow: 0 -1px 0 #aaa2 inset;
+      font-size: 10px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    .resize-handle {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 16px;
+      height: 16px;
+      cursor: nwse-resize;
+      z-index: 5;
+    }
+
+    .win-body h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #0a246a;
+      border-bottom: 2px solid #a6caf0;
+      padding-bottom: 6px;
+    }
+
+    .win-body h3 {
+      margin: 0 0 2px;
+      font-size: 13.5px;
+      color: #1a1a1a;
+    }
+
+    .win-body p {
+      margin: 4px 0;
+    }
+
+    .entry {
+      background: #f4f7fc;
+      border: 1px solid #d3ddf0;
+      border-left: 4px solid #3a6ea5;
+      border-radius: 3px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    .entry .meta {
+      color: #555;
+      font-size: 11.5px;
+      margin: 2px 0 6px;
+    }
+
+    .entry .tech {
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: #0a246a;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #dbe8fb;
+      border: 1px solid #b6cdef;
+      color: #0a3a7a;
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 11px;
+      margin: 2px 3px 0 0;
+    }
+
+    .gh-link {
+      display: inline-block;
+      margin-top: 6px;
+      color: #0a4fc4;
+      text-decoration: none;
+      font-size: 12px;
+      border: 1px solid #a9c3ef;
+      background: #eef4ff;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    .gh-link:hover {
+      background: #dbe8fb;
+      text-decoration: underline;
+    }
+
+    .skills-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-chip {
+      background: linear-gradient(180deg, #fdfdfd, #e9eef7);
+      border: 1px solid #b7c3d9;
+      border-radius: 5px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, .08);
+    }
+
+    .about-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3a6ea5, #0a246a);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      float: left;
+      margin: 0 14px 8px 0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+    }
+
+    #start-menu {
+      position: fixed;
+      left: 0;
+      bottom: var(--taskbar-h);
+      width: 290px;
+      max-width: 92vw;
+      background: var(--xp-face);
+      border: 1px solid #0047ab;
+      border-radius: 8px 8px 4px 4px;
+      box-shadow: 3px 3px 14px rgba(0, 0, 0, .5);
+      z-index: 100;
+      display: none;
+      overflow: hidden;
+    }
+
+    #start-menu.open {
+      display: block;
+    }
+
+    .sm-header {
+      background: linear-gradient(180deg, #1d63e8, #3d8dff 50%, #1a58d0);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .sm-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 4px;
+      background: #0a246a;
+      border: 1px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .sm-body {
+      display: flex;
+      background: #fff;
+    }
+
+    .sm-left {
+      flex: 1;
+      padding: 6px 0;
+    }
+
+    .sm-right {
+      width: 110px;
+      background: linear-gradient(180deg, #c6dcfb, #a9c9f0);
+      padding: 8px 0;
+    }
+
+    .sm-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      font-size: 12.5px;
+      cursor: pointer;
+      color: #111;
+    }
+
+    .sm-item:hover {
+      background: #2a6bdc;
+      color: #fff;
+    }
+
+    .sm-item .ico {
+      font-size: 18px;
+      width: 22px;
+      text-align: center;
+    }
+
+    .sm-sep {
+      height: 1px;
+      background: #d3d3d3;
+      margin: 4px 8px;
+    }
+
+    .sm-right .sm-item {
+      font-size: 11.5px;
+      padding: 6px 10px;
+      color: #0a246a;
+    }
+
+    .sm-right .sm-item:hover {
+      background: #5a8fdb;
+      color: #fff;
+    }
+
+    #taskbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--taskbar-h);
+      background: linear-gradient(180deg, #2a66d9, #1b52c4 40%, #123f9c);
+      border-top: 1px solid #6fa3ff;
+      display: flex;
+      align-items: center;
+      z-index: 90;
+      padding: 0 4px;
+      gap: 6px;
+    }
+
+    #start-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 26px;
+      padding: 0 12px 0 8px;
+      background: linear-gradient(180deg, #5cbb3a, #2f8a13 45%, #3fa01c);
+      border-radius: 4px;
+      color: #fff;
+      font-weight: bold;
+      font-style: italic;
+      font-size: 13px;
+      border: 1px solid #1f6b0c;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+
+    #start-btn .win-logo {
+      font-style: normal;
+      font-size: 15px;
+    }
+
+    #start-btn.active {
+      filter: brightness(.85);
+    }
+
+    #taskbar-sep {
+      width: 2px;
+      align-self: stretch;
+      background: #0e3a8c;
+      box-shadow: 1px 0 0 #4a80e0;
+      margin: 4px 2px;
+    }
+
+    #taskbar-items {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      height: 26px;
+    }
+
+    .task-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(180deg, #3f78d8, #2a5cc0);
+      border: 1px solid #163f96;
+      border-radius: 3px;
+      color: #fff;
+      font-size: 11.5px;
+      padding: 0 10px;
+      height: 26px;
+      cursor: pointer;
+      white-space: nowrap;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-btn.active {
+      background: linear-gradient(180deg, #1c4aa8, #123a8c);
+      box-shadow: inset 1px 1px 3px rgba(0, 0, 0, .5);
+    }
+
+    #tray {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(180deg, #1a4bb0, #123a90);
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 3px 0 0 3px;
+      color: #fff;
+      font-size: 11.5px;
+      border-left: 1px solid #0d2c72;
+    }
+
+    #hint {
+      position: fixed;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, .55);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 10px;
+      z-index: 80;
+      pointer-events: none;
+    }
+
+    @media (max-width:720px) {
+      .win {
+        width: 94vw !important;
+        height: 80vh !important;
+        left: 3vw !important;
+        top: 6vh !important;
+      }
+
+      #icons {
+        grid-template-columns: repeat(3, 72px);
+      }
+
+      .icon {
+        width: 72px;
+      }
+
+      #start-menu {
+        width: 80vw;
+      }
+
+      #hint {
+        display: none;
+      }
+    }
+
+    @media (max-width:420px) {
+      #icons {
+        grid-template-columns: repeat(2, 74px);
+        top: 10px;
+        left: 6px;
+        gap: 4px;
+      }
+
+      .win {
+        height: 82vh !important;
+        top: 5vh !important;
+      }
+
+      .win-body {
+        padding: 12px;
+      }
+    }
+
+    .win-body.terminal-body {
+      padding: 0;
+      overflow: hidden;
+      background: #050805;
+      display: flex;
+      min-height: 0;
+    }
+
+    #term-app {
+      --bg: #050805;
+      --panel: #0a0f09;
+      --green: #c8ff38;
+      --green-soft: #a8d92f;
+      --text: #d8e8c8;
+      --muted: #74816d;
+      --line: #1b2a17;
+      --danger: #ff6767;
+      --shadow: 0 0 30px rgba(200, 255, 56, .06);
+    }
+
+    #term-app * {
+      box-sizing: border-box
+    }
+
+    #term-app {
+      width: 100%;
+      margin: 0;
+      overflow: hidden
+    }
+
+    #term-app {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Courier New", Courier, monospace;
+      cursor: crosshair;
+    }
+
+    #term-app ::selection {
+      background: var(--green);
+      color: #050805
+    }
+
+    #term-app .noise {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .035;
+      z-index: 20;
+      background-image: radial-gradient(#fff .5px, transparent .5px);
+      background-size: 4px 4px;
+    }
+
+    #term-app .boot {
+      position: absolute;
+      inset: 0;
+      background: #030503;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: opacity .6s ease, visibility .6s ease;
+    }
+
+    #term-app .boot.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none
+    }
+
+    #term-app .boot-terminal {
+      width: min(760px, 100%);
+      font-size: clamp(12px, 2cqw, 15px);
+      line-height: 1.8;
+      color: var(--green);
+    }
+
+    #term-app .boot-line {
+      min-height: 1.8em
+    }
+
+    #term-app .cursor-block {
+      display: inline-block;
+      width: 9px;
+      height: 1em;
+      background: var(--green);
+      vertical-align: -2px;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    #term-app .shell {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 18px clamp(14px, 3cqw, 38px);
+    }
+
+    #term-app .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      gap: 15px;
+    }
+
+    #term-app .brand {
+      color: var(--green);
+      font-weight: bold;
+      letter-spacing: 2px
+    }
+
+    #term-app .status {
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    #term-app .terminal-window {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      width: min(1100px, 100%);
+      margin: 0 auto;
+    }
+
+    #term-app .screen {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding: clamp(20px, 4cqw, 48px) 0 20px;
+      position: relative;
+    }
+
+    #term-app .screen:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(transparent 50%, rgba(200, 255, 56, .012) 50%);
+      background-size: 100% 4px;
+    }
+
+    #term-app .prompt-line {
+      color: var(--muted);
+      margin-bottom: 25px;
+      font-size: 14px
+    }
+
+    #term-app .prompt-line .prompt {
+      color: var(--green)
+    }
+
+    #term-app .content {
+      position: relative;
+      z-index: 2;
+      animation: enter .25s ease
+    }
+
+    #term-app .ascii {
+      color: var(--green);
+      font-weight: bold;
+      white-space: pre;
+      font-size: clamp(8px, 1.45cqw, 15px);
+      line-height: 1.08;
+      margin: 0 0 22px;
+      overflow: hidden;
+    }
+
+    #term-app h1,
+    #term-app h2,
+    #term-app h3,
+    #term-app p {
+      margin-top: 0
+    }
+
+    #term-app h1 {
+      font-size: clamp(28px, 5cqw, 62px);
+      margin-bottom: 10px;
+      color: #f0f8e9
+    }
+
+    #term-app h2 {
+      font-size: clamp(21px, 3cqw, 34px);
+      color: var(--green);
+      margin-bottom: 22px
+    }
+
+    #term-app h3 {
+      color: #efffe4;
+      margin-bottom: 8px
+    }
+
+    #term-app .hero-bio {
+      max-width: 720px;
+      color: #a9b9a1;
+      line-height: 1.8;
+      font-size: clamp(14px, 1.7cqw, 17px)
+    }
+
+    #term-app .tag {
+      display: inline-block;
+      border: 1px solid #304522;
+      color: var(--green);
+      padding: 5px 9px;
+      margin: 4px 5px 4px 0;
+      font-size: 12px
+    }
+
+    #term-app .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px
+    }
+
+    #term-app .card {
+      border: 1px solid var(--line);
+      background: rgba(10, 15, 9, .68);
+      padding: 17px;
+      box-shadow: var(--shadow);
+    }
+
+    #term-app .meta {
+      color: var(--green-soft);
+      font-size: 12px;
+      margin-bottom: 8px
+    }
+
+    #term-app .muted {
+      color: var(--muted)
+    }
+
+    #term-app .desc {
+      color: #aebda7;
+      line-height: 1.65;
+      font-size: 13px
+    }
+
+    #term-app .tech {
+      color: #d7e9c9;
+      font-size: 12px;
+      line-height: 1.6
+    }
+
+    #term-app .tech span {
+      color: var(--green)
+    }
+
+    #term-app .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 850px
+    }
+
+    #term-app .skill {
+      border: 1px solid #293c22;
+      background: #090e08;
+      color: #d9e8d0;
+      padding: 8px 11px;
+      font-size: 13px;
+    }
+
+    #term-app .skill:before {
+      content: "$ ";
+      color: var(--green)
+    }
+
+    #term-app .home-grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 30px;
+      align-items: start
+    }
+
+    #term-app .commands {
+      border-left: 1px solid var(--line);
+      padding-left: 24px
+    }
+
+    #term-app .commands div {
+      margin: 0 0 10px;
+      color: #9dac96
+    }
+
+    #term-app .commands b {
+      color: var(--green);
+      font-weight: normal
+    }
+
+    #term-app .prompt-input {
+      flex: 0 0 auto;
+      border-top: 1px solid var(--line);
+      padding-top: 13px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--green);
+    }
+
+    #term-app .prompt-input .path {
+      white-space: nowrap
+    }
+
+    #term-app .t-input {
+      flex: 1;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      color: #efffe4;
+      font: inherit;
+      font-size: 15px;
+      caret-color: var(--green);
+      cursor: text;
+      min-width: 0;
+    }
+
+    #term-app .t-input::placeholder {
+      color: #4d5a49
+    }
+
+    #term-app .hint {
+      font-size: 11px;
+      color: #4d5a49;
+      text-align: right;
+      padding-top: 7px
+    }
+
+    #term-app .error {
+      color: var(--danger);
+      line-height: 1.7
+    }
+
+    #term-app .link {
+      color: var(--green);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--green)
+    }
+
+    #term-app .link:hover {
+      background: var(--green);
+      color: var(--bg)
+    }
+
+    #term-app .blink {
+      animation: blink 1s steps(1) infinite
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0
+      }
+    }
+
+    @keyframes enter {
+      from {
+        opacity: 0;
+        transform: translateY(5px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    @container (max-width:700px) {
+      #term-app .shell {
+        padding: 12px
+      }
+
+      #term-app .status {
+        display: none
+      }
+
+      #term-app .screen {
+        padding-top: 24px
+      }
+
+      #term-app .home-grid,
+      #term-app .grid {
+        grid-template-columns: 1fr
+      }
+
+      #term-app .commands {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        padding: 16px 0 0
+      }
+
+      #term-app .ascii {
+        font-size: 7px
+      }
+
+      #term-app .prompt-input .path {
+        font-size: 12px
+      }
+
+      #term-app .t-input {
+        font-size: 14px
+      }
+    }
+
+    @container (max-width:430px) {
+      #term-app .ascii {
+        font-size: 5.8px
+      }
+
+      #term-app .prompt-line {
+        font-size: 12px
+      }
+
+      #term-app .hint {
+        display: none
+      }
+
+      #term-app .card {
+        padding: 13px
+      }
+    }
+
+    #term-app {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      container-type: inline-size;
+      user-select: text;
+      -webkit-user-select: text;
+      font-size: 16px;
+      line-height: normal;
+      text-align: left;
+      isolation: isolate
+    }
+
+    #term-app .screen {
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #304522 transparent
+    }
+
+    #term-app .screen::-webkit-scrollbar {
+      width: 8px
+    }
+
+    #term-app .screen::-webkit-scrollbar-thumb {
+      background: #304522
+    }
+
+    #term-app h1,
+    #term-app h2,
+    #term-app h3 {
+      border: 0;
+      padding: 0;
+      font-family: inherit
+    }
+
+    #term-app h3 {
+      font-size: 1.17em
+    }
+
+    #term-app p {
+      margin-bottom: 1em
+    }
+
+    #term-app .tag {
+      background: none;
+      border-radius: 0
+    }
+
+    #term-app .shell,
+    #term-app .terminal-window {
+      min-width: 0
+    }
+
+    #term-app .grid>*,
+    #term-app .home-grid>* {
+      min-width: 0
+    }
+
+    #term-app .card,
+    #term-app .desc,
+    #term-app .hero-bio {
+      overflow-wrap: anywhere
+    }
+
+    .win.maximized {
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      border-radius: 0 !important;
+    }
+
+    .win.maximized .win-titlebar {
+      border-radius: 0;
+    }
+
+    .win.maximized .resize-handle {
+      display: none;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div id="boot-screen">
+    <div class="boot-logo">NTQ OS</div>
+    <div class="boot-sub">P O R T F O L I O &nbsp; E D I T I O N</div>
+    <div class="boot-bar-track">
+      <div class="boot-bar-fill"></div>
+    </div>
+    <div class="boot-status" id="boot-status">Initializing...</div>
+  </div>
+
+  <div id="hint">Double-click a desktop icon to open it &nbsp;|&nbsp; Tab + Enter also works</div>
+
+  <div id="desktop">
+    <div id="icons"></div>
+  </div>
+
+  <div id="start-menu">
+    <div class="sm-header">
+      <div class="sm-avatar">😀</div>
+      <div id="sm-username">NTQ</div>
+    </div>
+    <div class="sm-body">
+      <div class="sm-left" id="sm-items"></div>
+      <div class="sm-right">
+        <div class="sm-item" data-action="minimize-all"><span>My Windows</span></div>
+        <div class="sm-item" data-action="about-site"><span>About this Site</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <div id="start-btn"><span class="win-logo"><i class="fab fa-windows"></i></span> Start</div>
+    <div id="taskbar-sep"></div>
+    <div id="taskbar-items"></div>
+    <div id="tray"><span id="clock">00:00</span></div>
+  </div>
+
+  <script>
+
+    const DATA = {
+      name: "Noor Tabish Qureshy",
+      role: "Software Engineer",
+      bio: "I'm a B.Tech graduate in Information Technology and a passionate developer who loves bringing ideas to life through clean, modern, and user-friendly web applications. I specialize in crafting full-stack solutions that are not only functional but also seamless and robust. Whether it's front-end design or back-end architecture, I enjoy working across the entire stack to turn concepts into polished digital experiences. Clean code, thoughtful design, and performance-driven development are at the heart of everything I build.",
+
+      education: [
+        { school: "Guru Nanak Institute of Technology", degree: "B.Tech in Information Technology", year: "2021 - 2025" },
+        { school: "Seventh Day Adventist Sr. Sec. School", degree: "Class XII", year: "2020" },
+        { school: "Seventh Day Adventist Sr. Sec. School", degree: "Class X", year: "2018" }
+      ],
+
+      experience: [
+        {
+          company: "Shyam Steel Industries Limited",
+          role: "SAP BASIS Consultant",
+          work: "Worked on SAP Basis administration, system monitoring, user and authorization management, and supporting SAP system operations. Assisted with troubleshooting, performance monitoring, and maintaining reliable SAP environments.",
+          tech: ["SAP BASIS", "SAP S/4HANA", "SAP Security", "Linux"],
+          time: "Jan 2026 - Present"
+        }
+      ],
+
+      projects: [
+        {
+          name: "Bengali Handwritten Character Recognition",
+          desc: "A deep learning-based application that recognizes handwritten Bengali characters from input images. The project uses a Convolutional Neural Network (CNN) to classify handwritten characters, helping automate Bengali handwriting recognition and reduce the need for manual character identification.",
+          tech: ["Python", "TensorFlow", "Keras", "OpenCV", "NumPy", "scikit-learn", "PIL", "Tkinter"],
+          repo: "https://github.com/noortabishqureshy/Handwritten-Character-Recognition"
+        },
+        {
+          name: "Full-Stack Job Portal",
+          desc: "A full-stack job portal that connects job seekers with recruiters, allowing users to create accounts, search and filter job listings, apply for jobs, and manage their profiles. Recruiters can create profiles, post and manage job openings, and review applications through a dedicated platform.",
+          tech: ["React", "Tailwind CSS", "Node.js", "Express.js", "MongoDB", "JWT"],
+          repo: "https://github.com/noortabishqureshy/Job-Portal"
+        }
+      ],
+
+      skills: ["Java", "Python", "C", "C++", "HTML", "CSS", "Tailwind CSS", "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Express.js", "Spring Framework", "SQL", "MongoDB", "Git", "Linux", "AWS"],
+
+      contact: {
+        email: "ntq@gmail.com",
+        github: "https://github.com/noortabishqureshy",
+        youtube: "https://www.youtube.com/@NoorTabishQureshy"
+      }
+    };
+
+    const SECTIONS = [
+      { id: "about", label: "About Me", icon: "👤", render: renderAbout },
+      { id: "education", label: "Education", icon: "🎓", render: renderEducation },
+      { id: "experience", label: "Experience", icon: "💼", render: renderExperience },
+      { id: "projects", label: "Projects", icon: "📁", render: renderProjects },
+      { id: "skills", label: "Skills", icon: "🛠️", render: renderSkills },
+      { id: "contact", label: "Contact", icon: "✉️", render: renderContact },
+      { id: "terminal", label: "Terminal", icon: "⌨️", render: renderTerminal, bodyClass: "terminal-body", width: 940, height: 620 }
+    ];
+
+    function renderTerminal() {
+      return `<div id="term-app">
+              <div class="noise"></div>
+              <div class="boot"><div class="boot-terminal"></div></div>
+              <main class="shell" aria-label="NTQ terminal portfolio">
+                <header class="topbar">
+                  <div class="brand">NTQ@portfolio</div>
+                  <div class="status">TERMINAL MODE</div>
+                </header>
+                <section class="terminal-window">
+                  <div class="screen" aria-live="polite"></div>
+                  <form class="prompt-input" autocomplete="off">
+                    <span class="path">NTQ:~$</span>
+                    <input class="t-input" aria-label="Terminal command" spellcheck="false" placeholder="type a command..." autocomplete="off">
+                  </form>
+                  <div class="hint">TAB autocomplete · ↑/↓ history · ENTER run</div>
+                </section>
+              </main>
+            </div>`;
+    }
+
+
+    function createTerminal(root) {
+      "use strict";
+
+      const portfolio = {
+        name: "Noor Tabish Qureshy",
+        role: "Software Engineer",
+        bio: "I'm a B.Tech graduate in Information Technology and a passionate developer focused on building clean, modern, and user-friendly applications. I enjoy creating robust full-stack solutions, from intuitive front-end experiences to reliable back-end systems. Clean code, thoughtful design, and performance are at the core of everything I build.",
+
+        education: [
+          {
+            institution: "Guru Nanak Institute of Technology",
+            degree: "B.Tech in Information Technology",
+            year: "2021 - 2025"
+          },
+          {
+            institution: "Seventh Day Adventist Sr. Sec. School",
+            degree: "Class XII",
+            year: "2020"
+          },
+          {
+            institution: "Seventh Day Adventist Sr. Sec. School",
+            degree: "Class X",
+            year: "2018"
+          }
+        ],
+
+        experience: [
+          {
+            company: "Shyam Steel Industries Limited",
+            work: "SAP BASIS Consultant",
+            technologies: ["SAP BASIS", "SAP S/4HANA", "SAP Security", "Linux"],
+            timeframe: "Jan 2026 - Present"
+          }
+        ],
+
+        projects: [
+          {
+            name: "Bengali Handwritten Character Recognition",
+            description: "A CNN-based application that recognizes and classifies handwritten Bengali characters from images, automating character recognition.",
+            technologies: ["Python", "TensorFlow", "Keras", "OpenCV", "NumPy", "scikit-learn", "PIL", "Tkinter"],
+            github: "https://github.com/noortabishqureshy/Handwritten-Character-Recognition"
+          },
+          {
+            name: "Full-Stack Job Portal",
+            description: "A full-stack job portal connecting job seekers and recruiters, with features for job search, applications, profile management, and job posting.",
+            technologies: ["React", "Tailwind CSS", "Node.js", "Express.js", "MongoDB", "JWT"],
+            github: "https://github.com/noortabishqureshy/Job-Portal"
+          }
+        ],
+
+        skills: [
+          "Java", "Python", "C", "C++", "HTML", "CSS", "Tailwind CSS", "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Express.js", "Spring Framework", "SQL", "MongoDB", "Git", "Linux", "AWS"
+        ]
+      };
+
+      const screen = root.querySelector(".screen");
+      const input = root.querySelector(".t-input");
+      const form = root.querySelector(".prompt-input");
+      const promptPath = root.querySelector(".path");
+      const boot = root.querySelector(".boot");
+      const bootText = root.querySelector(".boot-terminal");
+
+      let currentDir = "~";
+      let history = [];
+      let historyIndex = -1;
+
+      const commands = ["cd about", "cd education", "cd experience", "cd projects", "cd skills", "cd ..", "cd ~", "clear", "help"];
+
+      const esc = (value) => String(value)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+      let booted = false;
+      function finishBoot() {
+        if (booted) return;
+        booted = true;
+        boot.classList.add("hidden");
+        render("~");
+        input.focus();
+      }
+
+      function typeBoot(lines, index = 0) {
+        if (booted || !root.isConnected) return;
+        if (index >= lines.length) { setTimeout(finishBoot, 300); return; }
+        const line = document.createElement("div");
+        line.className = "boot-line";
+        bootText.appendChild(line);
+        let char = 0;
+        const text = lines[index];
+        const timer = setInterval(() => {
+          if (booted) { clearInterval(timer); return; }
+          line.textContent = text.slice(0, ++char);
+          if (char >= text.length) {
+            clearInterval(timer);
+            setTimeout(() => typeBoot(lines, index + 1), 180);
+          }
+        }, 18);
+      }
+
+      function render(dir, message = "") {
+        currentDir = dir;
+        promptPath.textContent = `NTQ:${dir === "~" ? "~" : "~/" + dir}$`;
+        const content = document.createElement("div");
+        content.className = "content";
+
+        if (message) content.innerHTML += message;
+
+        if (dir === "~") {
+          content.innerHTML += `
+        <pre class="ascii">
+           ███╗   ██╗████████╗ ██████╗
+           ████╗  ██║╚══██╔══╝██╔═══██╗
+           ██╔██╗ ██║   ██║   ██║   ██║
+           ██║╚██╗██║   ██║   ██║   ██║
+           ██║ ╚████║   ██║   ╚██████╔█╗
+           ╚═╝  ╚═══╝   ╚═╝    ╚════╝╚═╝
+        </pre>
+        <div class="home-grid">
+          <div>
+            <h1>${esc(portfolio.name)}</h1>
+            <p class="meta">${esc(portfolio.role)}</p>
+            <p class="hero-bio">${esc(portfolio.bio)}</p>
+            <p class="muted">Welcome to my terminal portfolio</p>
+          </div>
+          <div class="commands">
+            <h3>AVAILABLE COMMANDS</h3>
+            <div><b>cd about</b> → profile & bio</div>
+            <div><b>cd education</b> → academic history</div>
+            <div><b>cd experience</b> → work experience</div>
+            <div><b>cd projects</b> → projects</div>
+            <div><b>cd skills</b> → skills</div>
+            <div><b>cd ..</b> → return home</div>
+            <div><b>help</b> → command reference</div>
+            <div><b>clear</b> → clear terminal</div>
+          </div>
+        </div>`;
+        }
+
+        if (dir === "about") {
+          content.innerHTML += `
+        <div class="prompt-line"><span class="prompt">NTQ:~/about$</span> cat profile.txt</div>
+        <h2>ABOUT</h2>
+        <h1>${esc(portfolio.name)}</h1>
+        <p class="meta">${esc(portfolio.role)}</p>
+        <p class="hero-bio">${esc(portfolio.bio)}</p>
+        <p class="muted">Use <span class="tag">cd ..</span> to return to the root directory.</p>`;
+        }
+
+        if (dir === "education") {
+          content.innerHTML += `
+        <div class="prompt-line"><span class="prompt">NTQ:~/education$</span> ls -la</div>
+        <h2>EDUCATION</h2>
+        <div class="grid">
+          ${portfolio.education.map(e => `
+            <article class="card">
+              <div class="meta">${esc(e.year)}</div>
+              <h3>${esc(e.institution)}</h3>
+              <div class="desc">${esc(e.degree)}</div>
+            </article>`).join("")}
+        </div>`;
+        }
+
+        if (dir === "experience") {
+          content.innerHTML += `
+        <div class="prompt-line"><span class="prompt">NTQ:~/experience$</span> cat experience.log</div>
+        <h2>EXPERIENCE</h2>
+        <div class="grid">
+          ${portfolio.experience.map(e => `
+            <article class="card">
+              <div class="meta">${esc(e.timeframe)}</div>
+              <h3>${esc(e.company)}</h3>
+              <p class="desc">${esc(e.work)}</p>
+              <div class="tech"><span>tech:</span> ${e.technologies.map(t => esc(t)).join(" · ")}</div>
+            </article>`).join("")}
+        </div>`;
+        }
+
+        if (dir === "projects") {
+          content.innerHTML += `
+        <div class="prompt-line"><span class="prompt">NTQ:~/projects$</span> ls ./github</div>
+        <h2>PROJECTS</h2>
+        <div class="grid">
+          ${portfolio.projects.map(p => `
+            <article class="card">
+              <h3>${esc(p.name)}</h3>
+              <p class="desc">${esc(p.description)}</p>
+              <div class="tech"><span>tech:</span> ${p.technologies.map(t => esc(t)).join(" · ")}</div>
+              <p style="margin:13px 0 0"><a class="link" href="${esc(p.github)}" target="_blank" rel="noopener noreferrer">[ github repo ]</a></p>
+            </article>`).join("")}
+        </div>`;
+        }
+
+        if (dir === "skills") {
+          content.innerHTML += `
+        <div class="prompt-line"><span class="prompt">NTQ:~/skills$</span> cat skills.txt</div>
+        <h2>SKILLS</h2>
+        <p class="muted">All technical skills</p>
+        <div class="skills">
+          ${portfolio.skills.map(s => `<span class="skill">${esc(s)}</span>`).join("")}
+        </div>`;
+        }
+
+        screen.innerHTML = "";
+        screen.appendChild(content);
+        screen.scrollTop = 0;
+      }
+
+      function help() {
+        render(currentDir, `
+      <div class="prompt-line"><span class="prompt">NTQ:${currentDir === "~" ? "~" : "~/" + currentDir}$</span> help</div>
+      <h2>COMMANDS</h2>
+      <div class="card">
+        <p><span class="meta">NAVIGATION</span></p>
+        <p class="desc">cd about · cd education · cd experience · cd projects · cd skills</p>
+        <p class="desc">cd .. · cd ~ · cd /</p>
+        <p><span class="meta">UTILITY</span></p>
+        <p class="desc">clear · help</p>
+        <p class="muted">Tip: type <span class="tag">cd</span> then press TAB for autocomplete.</p>
+      </div>`);
+      }
+
+      function runCommand(raw) {
+        finishBoot();
+        const cmd = raw.trim().replace(/\s+/g, " ");
+        if (!cmd) return;
+
+        history = history.filter(x => x !== cmd);
+        history.push(cmd);
+        historyIndex = history.length;
+
+        const normalized = cmd.toLowerCase();
+
+        if (normalized === "clear") {
+          screen.innerHTML = "";
+          return;
+        }
+        if (normalized === "help") {
+          help();
+          return;
+        }
+        if (normalized === "cd .." || normalized === "cd ~" || normalized === "cd /") {
+          render("~");
+          return;
+        }
+        if (normalized === "cd about" || normalized === "about") { render("about"); return; }
+        if (normalized === "cd education" || normalized === "education") { render("education"); return; }
+        if (normalized === "cd experience" || normalized === "experience") { render("experience"); return; }
+        if (normalized === "cd projects" || normalized === "projects") { render("projects"); return; }
+        if (normalized === "cd skills" || normalized === "skills") { render("skills"); return; }
+
+        const error = `<div class="error">bash: ${esc(cmd)}: command not found. Type <b>help</b> for available commands.</div>`;
+        render(currentDir, `<div class="prompt-line"><span class="prompt">NTQ:${currentDir === "~" ? "~" : "~/" + currentDir}$</span> ${esc(cmd)}</div>${error}`);
+      }
+
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        runCommand(input.value);
+        input.value = "";
+      });
+
+      input.addEventListener("keydown", e => {
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (!history.length) return;
+          historyIndex = Math.max(0, historyIndex - 1);
+          input.value = history[historyIndex] || "";
+        }
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (!history.length) return;
+          historyIndex = Math.min(history.length, historyIndex + 1);
+          input.value = history[historyIndex] || "";
+        }
+        if (e.key === "Tab") {
+          e.preventDefault();
+          const value = input.value.toLowerCase();
+          const matches = commands.filter(c => c.startsWith(value));
+          if (matches.length === 1) input.value = matches[0];
+          else if (matches.length > 1) {
+            render(currentDir, `<div class="muted">${matches.map(esc).join("   ")}</div>`);
+          }
+        }
+      });
+
+      root.addEventListener("click", () => input.focus());
+      root.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+          input.value = "";
+          input.focus();
+        }
+      });
+
+      typeBoot([
+        "initializing NTQ terminal portfolio...",
+        "loading kernel modules... [OK]",
+        "mounting /home/NTQ... [OK]",
+        "loading profile data... [OK]",
+        "starting terminal shell...",
+        "welcome, User."
+      ]);
+      root.addEventListener("keydown", finishBoot);
+      root.addEventListener("pointerdown", finishBoot);
+      return { focus() { input.focus(); } };
+    }
+
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function tagList(arr) {
+      return (arr || []).map(t => `<span class="tag">${esc(t)}</span>`).join("");
+    }
+
+    function renderAbout() {
+      const initials = DATA.name.split(" ").map(w => w[0]).slice(0, 3).join("").toUpperCase();
+      return `
+    <h2>About Me</h2>
+    <div class="about-avatar">${esc(initials)}</div>
+    <h3>${esc(DATA.name)}</h3>
+    <p style="color:#555;margin-top:0;">${esc(DATA.role)}</p>
+    <p>${esc(DATA.bio)}</p>
+    <div style="clear:both;"></div>
+  `;
+    }
+    function renderEducation() {
+      const items = DATA.education.map(e => `
+    <div class="entry">
+      <h3>${esc(e.school)}</h3>
+      <div class="meta">${esc(e.degree)} &nbsp;•&nbsp; ${esc(e.year)}</div>
+    </div>`).join("");
+      return `<h2>Education</h2>${items}`;
+    }
+    function renderExperience() {
+      const items = DATA.experience.map(x => `
+    <div class="entry">
+      <h3>${esc(x.role)} — ${esc(x.company)}</h3>
+      <div class="meta">${esc(x.time)}</div>
+      <p>${esc(x.work)}</p>
+      <div class="tech">${tagList(x.tech)}</div>
+    </div>`).join("");
+      return `<h2>Experience</h2>${items}`;
+    }
+    function renderProjects() {
+      const items = DATA.projects.map(p => `
+    <div class="entry">
+      <h3>${esc(p.name)}</h3>
+      <p>${esc(p.desc)}</p>
+      <div class="tech">${tagList(p.tech)}</div>
+      <a class="gh-link" href="${esc(p.repo)}" target="_blank" rel="noopener">🔗 View on GitHub</a>
+    </div>`).join("");
+      return `<h2>Projects</h2>${items}`;
+    }
+    function renderSkills() {
+      const chips = DATA.skills.map(s => `<span class="skill-chip">${esc(s)}</span>`).join("");
+      return `<h2>Skills</h2><div class="skills-wrap">${chips}</div>`;
+    }
+    function renderContact() {
+      const c = DATA.contact;
+      return `
+    <h2>Contact</h2>
+    <div class="entry">
+      <p><i class="fas fa-envelope"></i> Email: <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></p>
+      <p><i class="fab fa-github"></i> GitHub: <a href="${esc(c.github)}" target="_blank" rel="noopener">${esc(c.github)}</a></p>
+      <p><i class="fab fa-youtube"></i> YouTube: <a href="${esc(c.youtube)}" target="_blank" rel="noopener">${esc(c.youtube)}</a></p>
+    </div>
+  `;
+    }
+
+    let zTop = 20;
+    const openWindows = {};
+    let cascadeOffset = 0;
+
+    function buildIconsAndStart() {
+      const iconsWrap = document.getElementById("icons");
+      const smItems = document.getElementById("sm-items");
+      document.getElementById("sm-username").textContent = DATA.name;
+
+      SECTIONS.forEach(sec => {
+        const ic = document.createElement("div");
+        ic.className = "icon";
+        ic.tabIndex = 0;
+        ic.innerHTML = `<div class="icon-img">${sec.icon}</div><div class="icon-label">${esc(sec.label)}</div>`;
+        ic.addEventListener("dblclick", () => openWindow(sec.id));
+        ic.addEventListener("click", () => selectIcon(ic));
+        ic.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { openWindow(sec.id); }
+        });
+        let lastTap = 0;
+        ic.addEventListener("touchend", (e) => {
+          const now = Date.now();
+          if (now - lastTap < 350) { openWindow(sec.id); e.preventDefault(); }
+          else { selectIcon(ic); }
+          lastTap = now;
+        });
+        iconsWrap.appendChild(ic);
+
+        const smi = document.createElement("div");
+        smi.className = "sm-item";
+        smi.innerHTML = `<span class="ico">${sec.icon}</span><span>${esc(sec.label)}</span>`;
+        smi.addEventListener("click", () => { openWindow(sec.id); closeStartMenu(); });
+        smItems.appendChild(smi);
+      });
+    }
+
+    function selectIcon(el) {
+      document.querySelectorAll(".icon.selected").forEach(i => i.classList.remove("selected"));
+      el.classList.add("selected");
+      el.focus();
+    }
+
+    function openWindow(id) {
+      const sec = SECTIONS.find(s => s.id === id);
+      if (!sec) return;
+
+      if (openWindows[id]) {
+        const w = openWindows[id];
+        w.el.style.display = "flex";
+        focusWindow(id);
+        return;
+      }
+
+      const win = document.createElement("div");
+      win.className = "win active";
+      win.dataset.id = id;
+
+      const baseLeft = 60 + (cascadeOffset % 5) * 30;
+      const baseTop = 40 + (cascadeOffset % 5) * 26;
+      cascadeOffset++;
+
+      const isMobile = window.innerWidth <= 720;
+      if (!isMobile) {
+        let L = baseLeft, T = baseTop;
+        if (sec.width) {
+          const desk = document.getElementById("desktop");
+          const W = Math.min(sec.width, desk.clientWidth - 20);
+          const H = Math.min(sec.height, desk.clientHeight - 20);
+          win.style.width = W + "px"; win.style.height = H + "px";
+          L = Math.max(0, Math.min(baseLeft, desk.clientWidth - W - 10));
+          T = Math.max(0, Math.min(baseTop, desk.clientHeight - H - 10));
+        }
+        win.style.left = L + "px";
+        win.style.top = T + "px";
+      }
+
+      win.innerHTML = `
+    <div class="win-titlebar">
+      <div class="win-title"><span class="ti">${sec.icon}</span><span>${esc(sec.label)}</span></div>
+      <div class="win-btns">
+        <div class="win-btn min" title="Minimize">_</div>
+        <div class="win-btn max" title="Maximize">▢</div>
+        <div class="win-btn close" title="Close">✕</div>
+      </div>
+    </div>
+    <div class="win-menubar">File&nbsp;&nbsp;Edit&nbsp;&nbsp;View&nbsp;&nbsp;Help</div>
+    <div class="win-body${sec.bodyClass ? " " + sec.bodyClass : ""}">${sec.render()}</div>
+    <div class="win-statusbar">Ready</div>
+    <div class="resize-handle"></div>
+  `;
+      document.getElementById("desktop").appendChild(win);
+      const termRoot = win.querySelector("#term-app");
+      const term = termRoot ? createTerminal(termRoot) : null;
+
+      const titlebar = win.querySelector(".win-titlebar");
+      makeDraggable(win, titlebar);
+      makeResizable(win);
+
+      win.querySelector(".win-btn.close").addEventListener("click", (e) => { e.stopPropagation(); closeWindow(id); });
+      win.querySelector(".win-btn.min").addEventListener("click", (e) => { e.stopPropagation(); minimizeWindow(id); });
+      win.querySelector(".win-btn.max").addEventListener("click", (e) => { e.stopPropagation(); toggleMaximize(id); });
+      win.addEventListener("mousedown", () => focusWindow(id));
+      win.addEventListener("touchstart", () => focusWindow(id));
+
+      const tbtn = document.createElement("div");
+      tbtn.className = "task-btn active";
+      tbtn.innerHTML = `<span>${sec.icon}</span><span>${esc(sec.label)}</span>`;
+      tbtn.addEventListener("click", () => {
+        const w = openWindows[id];
+        if (w.el.style.display === "none") {
+          w.el.style.display = "flex";
+          focusWindow(id);
+        } else if (w.el.classList.contains("active")) {
+          minimizeWindow(id);
+        } else {
+          focusWindow(id);
+        }
+      });
+      document.getElementById("taskbar-items").appendChild(tbtn);
+
+      openWindows[id] = { el: win, taskbtn: tbtn, maximized: false, prevRect: null, term: term };
+      focusWindow(id);
+    }
+
+    function focusWindow(id) {
+      Object.keys(openWindows).forEach(k => {
+        const w = openWindows[k];
+        w.el.classList.toggle("active", k === id);
+        w.taskbtn.classList.toggle("active", k === id);
+      });
+      const w = openWindows[id];
+      if (w) {
+        zTop++;
+        w.el.style.zIndex = zTop;
+        w.el.style.display = "flex";
+        if (w.term) w.term.focus();
+      }
+    }
+
+    function closeWindow(id) {
+      const w = openWindows[id];
+      if (!w) return;
+      w.el.remove();
+      w.taskbtn.remove();
+      delete openWindows[id];
+    }
+
+    function minimizeWindow(id) {
+      const w = openWindows[id];
+      if (!w) return;
+      w.el.style.display = "none";
+      w.el.classList.remove("active");
+      w.taskbtn.classList.remove("active");
+    }
+
+    function toggleMaximize(id) {
+      const w = openWindows[id];
+      if (!w) return;
+      const el = w.el;
+      if (!w.maximized) {
+        w.prevRect = { left: el.style.left, top: el.style.top, width: el.style.width, height: el.style.height };
+        el.style.left = "0px";
+        el.style.top = "0px";
+        el.style.width = "100%";
+        el.style.height = "100%";
+        el.style.borderRadius = "0";
+        el.classList.add("maximized");
+        w.maximized = true;
+      } else {
+        const r = w.prevRect;
+        el.style.left = r.left; el.style.top = r.top;
+        el.style.width = r.width; el.style.height = r.height;
+        el.style.borderRadius = "8px 8px 4px 4px";
+        el.classList.remove("maximized");
+        w.maximized = false;
+      }
+      focusWindow(id);
+    }
+
+    function makeDraggable(win, handle) {
+      let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
+      function start(x, y) {
+        if (win.dataset.id && openWindows[win.dataset.id] && openWindows[win.dataset.id].maximized) return;
+        dragging = true;
+        sx = x; sy = y;
+        ox = parseInt(win.style.left || 0, 10);
+        oy = parseInt(win.style.top || 0, 10);
+        focusWindow(win.dataset.id);
+      }
+      function move(x, y) {
+        if (!dragging) return;
+        let nx = ox + (x - sx);
+        let ny = oy + (y - sy);
+        ny = Math.max(0, ny);
+        win.style.left = nx + "px";
+        win.style.top = ny + "px";
+      }
+      function end() { dragging = false; }
+
+      handle.addEventListener("mousedown", (e) => { start(e.clientX, e.clientY); e.preventDefault(); });
+      window.addEventListener("mousemove", (e) => move(e.clientX, e.clientY));
+      window.addEventListener("mouseup", end);
+
+      handle.addEventListener("touchstart", (e) => {
+        const t = e.touches[0]; start(t.clientX, t.clientY);
+      }, { passive: true });
+      window.addEventListener("touchmove", (e) => {
+        if (!dragging) return;
+        const t = e.touches[0]; move(t.clientX, t.clientY);
+      }, { passive: true });
+      window.addEventListener("touchend", end);
+    }
+
+    function makeResizable(win) {
+      const handle = win.querySelector(".resize-handle");
+      let sx = 0, sy = 0, ow = 0, oh = 0, resizing = false;
+      handle.addEventListener("mousedown", (e) => {
+        resizing = true;
+        sx = e.clientX; sy = e.clientY;
+        ow = win.offsetWidth; oh = win.offsetHeight;
+        e.preventDefault(); e.stopPropagation();
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!resizing) return;
+        win.style.width = Math.max(260, ow + (e.clientX - sx)) + "px";
+        win.style.height = Math.max(180, oh + (e.clientY - sy)) + "px";
+      });
+      window.addEventListener("mouseup", () => resizing = false);
+    }
+
+    function toggleStartMenu() {
+      const sm = document.getElementById("start-menu");
+      const btn = document.getElementById("start-btn");
+      sm.classList.toggle("open");
+      btn.classList.toggle("active");
+    }
+    function closeStartMenu() {
+      document.getElementById("start-menu").classList.remove("open");
+      document.getElementById("start-btn").classList.remove("active");
+    }
+    document.getElementById("start-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleStartMenu();
+    });
+    document.addEventListener("click", (e) => {
+      const sm = document.getElementById("start-menu");
+      if (sm.classList.contains("open") && !sm.contains(e.target) && e.target.id !== "start-btn") {
+        closeStartMenu();
+      }
+    });
+    document.querySelectorAll('[data-action="minimize-all"]').forEach(el => {
+      el.addEventListener("click", () => {
+        Object.keys(openWindows).forEach(minimizeWindow);
+        closeStartMenu();
+      });
+    });
+    document.querySelectorAll('[data-action="about-site"]').forEach(el => {
+      el.addEventListener("click", () => {
+        alert("Shaping dreams in the library of bits and bytes");
+        closeStartMenu();
+      });
+    });
+
+    document.getElementById("desktop").addEventListener("mousedown", (e) => {
+      if (e.target.id === "desktop") {
+        document.querySelectorAll(".icon.selected").forEach(i => i.classList.remove("selected"));
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { closeStartMenu(); }
+    });
+
+    function tickClock() {
+      const d = new Date();
+      let h = d.getHours();
+      const m = String(d.getMinutes()).padStart(2, "0");
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12; if (h === 0) h = 12;
+      document.getElementById("clock").textContent = `${h}:${m} ${ampm}`;
+    }
+    setInterval(tickClock, 1000 * 15);
+
+    const bootStatus = document.getElementById("boot-status");
+    const bootLines = [
+      "Initializing...",
+      "Loading files...",
+      "Starting portfolio services...",
+      "Preparing desktop..."
+    ];
+    let bi = 0;
+    const bootInterval = setInterval(() => {
+      bi++;
+      if (bi < bootLines.length) {
+        bootStatus.textContent = bootLines[bi];
+      }
+    }, 450);
+
+    window.addEventListener("load", () => {
+      buildIconsAndStart();
+      tickClock();
+      setTimeout(() => {
+        clearInterval(bootInterval);
+        document.getElementById("boot-screen").classList.add("hidden");
+        setTimeout(() => {
+          document.getElementById("boot-screen").style.display = "none";
+          openWindow("about");
+        }, 650);
+      }, 2200);
+    });
+  </script>
+
+</body>
+
+</html>
